@@ -120,7 +120,7 @@ func (s *service) notifyAll(ctx context.Context, resource *config.Rule, objects 
 	if len(objects) == 0 {
 		return nil
 	}
-	queue := make(chan storage.Object, len(objects))
+	queue := make(chan int, len(objects))
 	waitGroup := &sync.WaitGroup{}
 	var errorChannel = make(chan error, len(objects))
 	for worker := 0; worker < Limit; worker++ {
@@ -129,14 +129,14 @@ func (s *service) notifyAll(ctx context.Context, resource *config.Rule, objects 
 		go func() {
 			defer waitGroup.Done()
 
-			for object := range queue {
-				errorChannel <- s.notify(ctx, resource, object, response) // blocking wait for work
+			for i := range queue {
+				errorChannel <- s.notify(ctx, resource, objects[i], response) // blocking wait for work
 			}
 		}()
 	}
 	for i := range objects {
 		// log.Printf("Work %s enqueued\n", objects[i])
-		queue <- objects[i]
+		queue <- i
 	}
 	close(queue)
 	waitGroup.Wait()
