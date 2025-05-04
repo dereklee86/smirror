@@ -11,7 +11,7 @@ on:
 
 
 jobs:
-    name: install openai-codex
+  - name: install openai-codex
     runs-on: self-hosted
     steps:
       - name: Checkout code
