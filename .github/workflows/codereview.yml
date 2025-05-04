@@ -1,0 +1,30 @@
+name: openai-codereview
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+        git_sha:
+            description: 'Git SHA to review'
+            required: true
+            default: 'HEAD'
+
+
+jobs:
+    name: install openai-codex
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          npm install -g @openai/codex
+
+      - name: Run OpenAI Codex
+        env: 
+            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          codex --provider gemini --git_sha ${{ github.event.inputs.git_sha }}3
