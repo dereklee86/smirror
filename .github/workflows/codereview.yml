@@ -1,7 +1,6 @@
 name: openai-codereview
 on:
   pull_request:
-    branches: [main]
   workflow_dispatch:
     inputs:
         git_sha:
