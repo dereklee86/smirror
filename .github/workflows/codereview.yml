@@ -27,4 +27,4 @@ jobs:
         env: 
             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          codex -a auto-edit --quiet --provider gemini -q "Can you please do a code review of this branch and comment to this PR?"
+          codex -a auto-edit --quiet --provider gemini -q "Can you please do a code review of this branch ${{ github.head_ref }} and comment to this PR number ${{ github.event.number }}?"
