@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+const Limit = 50
+
 //Service represents a cron service
 type Service interface {
 	Tick(ctx context.Context) *Response
@@ -118,15 +120,26 @@ func (s *service) notifyAll(ctx context.Context, resource *config.Rule, objects 
 	if len(objects) == 0 {
 		return nil
 	}
+	queue := make(chan int, len(objects))
 	waitGroup := &sync.WaitGroup{}
-	waitGroup.Add(len(objects))
 	var errorChannel = make(chan error, len(objects))
-	for i := range objects {
-		go func(object storage.Object) {
+	for worker := 0; worker < Limit; worker++ {
+		waitGroup.Add(1)
+
+		go func() {
 			defer waitGroup.Done()
-			errorChannel <- s.notify(ctx, resource, object, response)
-		}(objects[i])
+
+			for i := range queue {
+				errorChannel <- s.notify(ctx, resource, objects[i], response) // blocking wait for work
+			}
+		}()
 	}
+	for i := range objects {
+		// log.Printf("Work %s enqueued\n", objects[i])
+		queue <- i
+	}
+	close(queue)
+	waitGroup.Wait()
 	for i := 0; i < len(objects); i++ {
 		if err := <-errorChannel; err != nil {
 			return err

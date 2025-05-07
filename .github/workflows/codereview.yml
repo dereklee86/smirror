@@ -1,0 +1,30 @@
+name: openai-codereview
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+        git_sha:
+            description: 'Git SHA to review'
+            required: true
+            default: 'HEAD'
+
+
+jobs:
+  openai-codex:  
+    name: install openai-codex
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          npm install @openai/codex
+
+      - name: Run OpenAI Codex
+        env: 
+            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          codex -a auto-edit --quiet --provider gemini -q "Can you please do a code review of this current branch? Focus on code quality (e.g., security, performance, style, correctness)"
